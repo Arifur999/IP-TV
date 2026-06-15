@@ -1,15 +1,5 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "cd artifacts/ar-iptv && pnpm run build",
   "installCommand": "pnpm install",
-  "devCommand": "pnpm run dev",
-  "framework": "vite",
-  "regions": ["iad"],
-  "outputDirectory": "artifacts/ar-iptv/dist/public",
-  "builds": [
-    {
-      "src": "artifacts/ar-iptv/**",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist/public" }
-    }
-  ]
+  "outputDirectory": "artifacts/ar-iptv/dist/public"
 }
