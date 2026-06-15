@@ -8,6 +8,45 @@ export interface Channel {
   group: string;
 }
 
+const COUNTRY_CODES: Record<string, string> = {
+  argentina: "ar",
+  colombia: "co",
+  russia: "ru",
+  usa: "us",
+  brazil: "br",
+  france: "fr",
+  turkey: "tr",
+  chile: "cl",
+  portugal: "pt",
+  spain: "es",
+  uk: "gb",
+  italy: "it",
+  mexico: "mx",
+  international: "un",
+  ukraine: "ua",
+  albania: "al",
+  "czech-republic": "cz",
+  bulgaria: "bg",
+  hungary: "hu",
+  germany: "de",
+  netherlands: "nl",
+  norway: "no",
+  israel: "il",
+  macau: "mo",
+  "hong-kong": "hk",
+  india: "in",
+  "saudi-arabia": "sa",
+  qatar: "qa",
+  turkmenistan: "tm",
+  romania: "ro",
+};
+
+export function getCountryFlagUrl(slug: string): string {
+  const code = COUNTRY_CODES[slug.toLowerCase()];
+  if (!code) return `https://flagcdn.com/w80/un.png`;
+  return `https://flagcdn.com/w80/${code}.png`;
+}
+
 export const channels: Channel[] = [
   { id: 1, name: "TNT Sports ARG", url: "https://1nyaler.streamhostingcdn.top/stream/30/index.m3u8", country: "Argentina", countrySlug: "argentina", countryFlag: "🇦🇷", group: "Sport" },
   { id: 2, name: "TyC Sports ARG", url: "https://1nyaler.streamhostingcdn.top/stream/84/index.m3u8", country: "Argentina", countrySlug: "argentina", countryFlag: "🇦🇷", group: "Sport" },

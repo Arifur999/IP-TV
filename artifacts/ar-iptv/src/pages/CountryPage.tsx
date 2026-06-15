@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { getChannelsByCountry } from "@/lib/channels";
+import { getChannelsByCountry, getCountryFlagUrl } from "@/lib/channels";
 import Navbar from "@/components/Navbar";
 import ChannelRow from "@/components/ChannelRow";
 import { ArrowLeft } from "lucide-react";
@@ -27,7 +27,7 @@ export default function CountryPage() {
   }
 
   const countryName = channels[0].country;
-  const countryFlag = channels[0].countryFlag;
+  const flagUrl = getCountryFlagUrl(slug);
 
   return (
     <div className="min-h-screen bg-black text-white font-mono">
@@ -43,7 +43,9 @@ export default function CountryPage() {
 
         <div className="mb-8 flex items-center justify-between border-b border-cyan-500/20 pb-6 animate-fade-in-up">
           <div className="flex items-center gap-4">
-            <span className="text-5xl drop-shadow-[0_0_10px_rgba(0,229,255,0.3)]">{countryFlag}</span>
+            <div className="w-16 h-12 overflow-hidden rounded shadow-lg drop-shadow-[0_0_10px_rgba(0,229,255,0.4)]">
+              <img src={flagUrl} alt={countryName} className="w-full h-full object-cover" />
+            </div>
             <h1 className="text-3xl font-bold tracking-widest text-white drop-shadow-[0_0_5px_rgba(0,229,255,0.3)] sm:text-4xl">
               {countryName}
             </h1>
