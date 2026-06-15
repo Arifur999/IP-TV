@@ -257,3 +257,21 @@
     pointer-events: none;
   }
 }
+
+/* TV D-pad / Keyboard Remote Navigation Support */
+*:focus {
+  outline: 2px solid #00E5FF;
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #00E5FF;
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+}
