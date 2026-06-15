@@ -1,5 +1,0 @@
-{
-  "buildCommand": "cd artifacts/ar-iptv && pnpm run build",
-  "installCommand": "pnpm install",
-  "outputDirectory": "artifacts/ar-iptv/dist/public"
-}
