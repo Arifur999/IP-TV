@@ -4,5 +4,12 @@
   "devCommand": "pnpm run dev",
   "framework": "vite",
   "regions": ["iad"],
-  "outputDirectory": "artifacts/ar-iptv/dist/public"
+  "outputDirectory": "artifacts/ar-iptv/dist/public",
+  "builds": [
+    {
+      "src": "artifacts/ar-iptv/**",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist/public" }
+    }
+  ]
 }
