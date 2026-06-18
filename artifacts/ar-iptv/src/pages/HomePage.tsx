@@ -18,6 +18,16 @@ export default function HomePage() {
   const categories = data?.categories ?? [];
   const channels = data?.channels ?? [];
 
+  const topCategories = useMemo(
+    () => categories.filter((category) => category.count > 0).sort((a, b) => b.count - a.count).slice(0, 6),
+    [categories]
+  );
+
+  const topCountries = useMemo(
+    () => [...countries].sort((a, b) => b.count - a.count).slice(0, 6),
+    [countries]
+  );
+
   const searchResults = useMemo(
     () => (query ? searchChannels(channels, query).slice(0, 6) : []),
     [channels, query]
@@ -50,14 +60,21 @@ export default function HomePage() {
                     hint: `${result.country} • ${result.category}`,
                   }))}
                 />
+                {isError && (
+                  <p className="mt-3 text-sm text-rose-300">Unable to load live TV catalog. Please refresh or check your connection.</p>
+                )}
               </div>
             </div>
 
             <div className="space-y-4 rounded-3xl bg-slate-900/80 p-6 text-slate-300 shadow-inner shadow-black/20">
               <div className="rounded-3xl bg-cyan-500/10 p-5">
                 <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/80">Live catalog</p>
-                <p className="mt-3 text-2xl font-semibold text-white">{channels.length.toLocaleString()} channels</p>
-                <p className="mt-2 text-sm text-slate-400">From {countries.length} countries and {categories.length} categories.</p>
+                <p className="mt-3 text-2xl font-semibold text-white">
+                  {isLoading ? "Loading channels..." : channels.length.toLocaleString()} channels
+                </p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {isLoading ? "Fetching global IPTV catalog..." : `From ${countries.length} countries and ${categories.length} categories.`}
+                </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Link
@@ -90,7 +107,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {categories.slice(0, 6).map((category, index) => (
+                {topCategories.map((category, index) => (
                   <CategoryCard key={category.slug} title={category.name} slug={category.slug} count={category.count} icon={category.icon} gradient={category.gradient} />
                 ))}
               </div>
@@ -107,7 +124,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {countries.slice(0, 6).map((country, index) => (
+                {topCountries.map((country, index) => (
                   <CountryCard key={country.countrySlug} {...country} index={index} />
                 ))}
               </div>
