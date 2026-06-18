@@ -35,6 +35,10 @@ export interface CategoryMeta {
 const CHANNELS_URL = "https://iptv-org.github.io/api/channels.json";
 const COUNTRIES_URL = "https://iptv-org.github.io/api/countries.json";
 
+const LOCAL_M3U_SOURCES = [
+  { name: "Sport", url: "/playlists/Sport.m3u", category: "Sports" },
+];
+
 const CATEGORY_META_DATA: Record<string, { icon: string; gradient: string }> = {
   Entertainment: { icon: "🎬", gradient: "from-pink-500 via-purple-500 to-indigo-500" },
   Sports: { icon: "🏆", gradient: "from-cyan-500 via-sky-500 to-blue-600" },
@@ -91,6 +95,41 @@ function getEmojiFlag(countryCode: string) {
   return String.fromCodePoint(...[...code].map((char) => 0x1f1e6 - 65 + char.charCodeAt(0)));
 }
 
+function parseM3u(text: string, category: string) {
+  const lines = text.split(/\r?\n/).map((line) => line.trim());
+  const items: any[] = [];
+  let title = "";
+
+  for (const line of lines) {
+    if (!line) continue;
+    if (line.startsWith("#EXTINF:")) {
+      const commaIndex = line.indexOf(",");
+      title = commaIndex >= 0 ? line.slice(commaIndex + 1).trim() : line;
+      continue;
+    }
+
+    if (line.startsWith("#")) {
+      continue;
+    }
+
+    if (title) {
+      items.push({
+        name: title || "Untitled channel",
+        url: line,
+        country: "Local",
+        categories: [category],
+        group: category,
+        language: "Unknown",
+        logo: "",
+        website: undefined,
+      });
+      title = "";
+    }
+  }
+
+  return items;
+}
+
 export function getCountryFlagUrl(countryCode: string) {
   if (!countryCode) return "https://flagcdn.com/w80/un.png";
   return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
@@ -109,7 +148,7 @@ function chooseCategory(rawCategories: string[] = [], group?: string) {
 }
 
 function buildChannel(channel: any, countryCodeOverrides: Map<string, string>): Channel {
-  const country = channel.country?.trim() || "International";
+  const country = channel.country?.trim() || "Local";
   const countrySlug = slugify(country);
   const countryCode = (channel.country_code || countryCodeOverrides.get(countrySlug) || "").toLowerCase();
   const categories = Array.isArray(channel.categories)
@@ -186,6 +225,19 @@ export function useIptvCatalog() {
         }),
       ]);
 
+      const localM3uItems = await Promise.all(
+        LOCAL_M3U_SOURCES.map(async (source) => {
+          const response = await fetch(source.url);
+          if (!response.ok) return [];
+          const text = await response.text();
+          return parseM3u(text, source.category);
+        })
+      );
+
+      const localChannels = localM3uItems
+        .flat()
+        .map((item: any) => buildChannel(item, countryCodeOverrides));
+
       const countryCodeOverrides = new Map<string, string>();
       if (Array.isArray(rawCountries)) {
         rawCountries.forEach((country: any) => {
@@ -197,11 +249,14 @@ export function useIptvCatalog() {
         });
       }
 
-      const channels: Channel[] = Array.isArray(rawChannels)
-        ? rawChannels
-            .map((item: any) => buildChannel(item, countryCodeOverrides))
-            .filter((channel) => !!channel.streamUrl)
-        : [];
+      const channels: Channel[] = [
+        ...(Array.isArray(rawChannels)
+          ? rawChannels
+              .map((item: any) => buildChannel(item, countryCodeOverrides))
+              .filter((channel) => !!channel.streamUrl)
+          : []),
+        ...localChannels,
+      ];
 
       const countryMap = new Map<string, CountryMeta>();
       channels.forEach((channel) => {
