@@ -100,7 +100,6 @@ export default function CountryPage() {
               <SearchBar
                 value={query}
                 onChange={setQuery}
-                onSubmit={() => undefined}
                 placeholder="Search this country"
               />
             </div>

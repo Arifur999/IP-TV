@@ -149,6 +149,12 @@ export function getCategoryLabel(slug: string) {
   return entry || slug.split("-").map((part) => part[0]?.toUpperCase() + part.slice(1)).join(" ");
 }
 
+export interface IptvCatalog {
+  channels: Channel[];
+  countries: CountryMeta[];
+  categories: CategoryMeta[];
+}
+
 export function searchChannels(channels: Channel[], query: string) {
   const term = query.trim().toLowerCase();
   if (!term) return channels;
@@ -156,7 +162,7 @@ export function searchChannels(channels: Channel[], query: string) {
   return channels.filter((channel) => {
     return [channel.name, channel.country, channel.category, channel.language, channel.website]
       .filter(Boolean)
-      .some((field) => field.toLowerCase().includes(term));
+      .some((field) => String(field).toLowerCase().includes(term));
   });
 }
 
@@ -166,9 +172,9 @@ export function filterChannelsByLetter(channels: Channel[], letter: string) {
 }
 
 export function useIptvCatalog() {
-  return useQuery(
-    ["iptv-catalog"],
-    async () => {
+  return useQuery<IptvCatalog, Error, IptvCatalog, readonly ["iptv-catalog"]>({
+    queryKey: ["iptv-catalog"] as const,
+    queryFn: async () => {
       const [rawChannels, rawCountries] = await Promise.all([
         fetch(CHANNELS_URL).then((res) => {
           if (!res.ok) throw new Error("Failed to load channels");
@@ -222,12 +228,9 @@ export function useIptvCatalog() {
 
       return { channels, countries, categories };
     },
-    {
-      staleTime: 1000 * 60 * 10,
-      cacheTime: 1000 * 60 * 30,
-      refetchOnWindowFocus: false,
-    }
-  );
+    staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+  });
 }
 
 export const CATEGORY_META = Object.fromEntries(

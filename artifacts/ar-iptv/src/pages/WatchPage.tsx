@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { useIptvCatalog } from "@/lib/channels";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useFavorites, useRecentWatch } from "@/hooks/use-favorites";
-import { Play, Heart, HeartBroken } from "lucide-react";
+import { Play, Heart, HeartOff } from "lucide-react";
 
 export default function WatchPage() {
   const params = useParams();
@@ -46,7 +46,7 @@ export default function WatchPage() {
   const prevChannel = currentIndex > 0 ? countryChannels[currentIndex - 1] : null;
   const nextChannel = currentIndex < countryChannels.length - 1 ? countryChannels[currentIndex + 1] : null;
 
-  const isFavorite = favorites.includes(channel.id.toString());
+  const isFavorite = favorites.includes(channel.id);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#02050f] text-white font-sans">
@@ -68,7 +68,7 @@ export default function WatchPage() {
               onClick={() => toggleFavorite(channel.id)}
               className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/20"
             >
-              {isFavorite ? <Heart className="h-4 w-4 text-pink-400" /> : <HeartBroken className="h-4 w-4 text-cyan-300" />}
+              {isFavorite ? <Heart className="h-4 w-4 text-pink-400" /> : <HeartOff className="h-4 w-4 text-cyan-300" />}
               {isFavorite ? "Remove favorite" : "Add favorite"}
             </button>
           </div>

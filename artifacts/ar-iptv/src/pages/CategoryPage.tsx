@@ -3,7 +3,7 @@ import { useParams, Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import ChannelCard from "@/components/ChannelCard";
 import SearchBar from "@/components/SearchBar";
-import { useIptvCatalog, getCategoryLabel, getCategorySlug, searchChannels, CATEGORY_META } from "@/lib/channels";
+import { Channel, useIptvCatalog, getCategoryLabel, getCategorySlug, searchChannels, CATEGORY_META } from "@/lib/channels";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 
 const alphabet = ["All", ...Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index))];
@@ -17,7 +17,7 @@ export default function CategoryPage() {
   const [visibleItems, setVisibleItems] = useState(18);
 
   const categoryLabel = getCategoryLabel(categorySlug);
-  const channels = useMemo(() => {
+  const channels = useMemo<Channel[]>(() => {
     if (!data) return [];
     return data.channels.filter((channel) => channel.categorySlug === categorySlug);
   }, [data, categorySlug]);
@@ -33,8 +33,8 @@ export default function CategoryPage() {
     return results;
   }, [channels, searchQuery, letterFilter]);
 
-  const countryGroups = useMemo(() => {
-    return filteredChannels.reduce<Record<string, typeof filteredChannels>>((acc, channel) => {
+  const countryGroups = useMemo<Record<string, Channel[]>>(() => {
+    return filteredChannels.reduce<Record<string, Channel[]>>((acc, channel) => {
       if (!acc[channel.country]) acc[channel.country] = [];
       acc[channel.country].push(channel);
       return acc;
@@ -43,8 +43,8 @@ export default function CategoryPage() {
 
   const shouldShowLoadMore = filteredChannels.length > visibleItems;
   const visibleChannels = filteredChannels.slice(0, visibleItems);
-  const visibleCountryGroups = useMemo(() => {
-    return visibleChannels.reduce<Record<string, typeof visibleChannels>>((acc, channel) => {
+  const visibleCountryGroups = useMemo<Record<string, Channel[]>>(() => {
+    return visibleChannels.reduce<Record<string, Channel[]>>((acc, channel) => {
       if (!acc[channel.country]) acc[channel.country] = [];
       acc[channel.country].push(channel);
       return acc;

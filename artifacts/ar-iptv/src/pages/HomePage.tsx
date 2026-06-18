@@ -23,10 +23,7 @@ export default function HomePage() {
     [channels, query]
   );
 
-  const featuredChannels = useMemo(
-    () => channels.slice(0, 8),
-    [channels]
-  );
+  const featuredChannels = useMemo(() => channels.slice(0, 8), [channels]);
 
   return (
     <div className="min-h-screen bg-[#03040d] text-slate-100 selection:bg-cyan-500/30 font-sans">
@@ -46,10 +43,9 @@ export default function HomePage() {
                 <SearchBar
                   value={query}
                   onChange={setQuery}
-                  onSubmit={() => undefined}
                   placeholder="Search channels, countries, categories..."
                   suggestions={searchResults.map((result) => ({
-                    id: result.id.toString(),
+                    id: result.id,
                     label: result.name,
                     hint: `${result.country} • ${result.category}`,
                   }))}
@@ -94,7 +90,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {categories.slice(0, 6).map((category) => (
+                {categories.slice(0, 6).map((category, index) => (
                   <CategoryCard key={category.slug} title={category.name} slug={category.slug} count={category.count} icon={category.icon} gradient={category.gradient} />
                 ))}
               </div>
@@ -127,10 +123,10 @@ export default function HomePage() {
               {favorites.length ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {channels
-                    .filter((channel) => favorites.includes(channel.id.toString()))
+                    .filter((channel) => favorites.includes(channel.id))
                     .slice(0, 4)
-                    .map((channel) => (
-                      <ChannelCard key={channel.id} channel={channel} />
+                    .map((channel, index) => (
+                      <ChannelCard key={channel.id} channel={channel} index={index} />
                     ))}
                 </div>
               ) : (
@@ -145,9 +141,9 @@ export default function HomePage() {
               </div>
               {recent.length ? (
                 <div className="grid gap-4">
-                  {recent.slice(0, 3).map((id) => {
-                    const channel = channels.find((item) => item.id.toString() === id);
-                    return channel ? <ChannelCard key={channel.id} channel={channel} /> : null;
+                  {recent.slice(0, 3).map((id, index) => {
+                    const channel = channels.find((item) => item.id === id);
+                    return channel ? <ChannelCard key={channel.id} channel={channel} index={index} /> : null;
                   })}
                 </div>
               ) : (
@@ -168,8 +164,8 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {featuredChannels.map((channel) => (
-              <ChannelCard key={channel.id} channel={channel} />
+            {featuredChannels.map((channel, index) => (
+              <ChannelCard key={channel.id} channel={channel} index={index} />
             ))}
           </div>
         </section>
