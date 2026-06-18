@@ -37,6 +37,8 @@ const COUNTRIES_URL = "https://iptv-org.github.io/api/countries.json";
 
 const LOCAL_M3U_SOURCES = [
   { name: "Sport", url: "/playlists/Sport.m3u", category: "Sports" },
+  { name: "Sport Clean", url: "/playlists/Sport_Clean.m3u", category: "Sports" },
+  { name: "FIFA World Cup", url: "/playlists/Fifa-world-cup.m3u", category: "Sports" },
 ];
 
 const CATEGORY_META_DATA: Record<string, { icon: string; gradient: string }> = {
@@ -215,14 +217,12 @@ export function useIptvCatalog() {
     queryKey: ["iptv-catalog"] as const,
     queryFn: async () => {
       const [rawChannels, rawCountries] = await Promise.all([
-        fetch(CHANNELS_URL).then((res) => {
-          if (!res.ok) throw new Error("Failed to load channels");
-          return res.json();
-        }),
-        fetch(COUNTRIES_URL).then((res) => {
-          if (!res.ok) throw new Error("Failed to load countries");
-          return res.json();
-        }),
+        fetch(CHANNELS_URL)
+          .then(async (res) => (res.ok ? res.json() : []))
+          .catch(() => []),
+        fetch(COUNTRIES_URL)
+          .then(async (res) => (res.ok ? res.json() : []))
+          .catch(() => []),
       ]);
 
       const localM3uItems = await Promise.all(
@@ -234,10 +234,6 @@ export function useIptvCatalog() {
         })
       );
 
-      const localChannels = localM3uItems
-        .flat()
-        .map((item: any) => buildChannel(item, countryCodeOverrides));
-
       const countryCodeOverrides = new Map<string, string>();
       if (Array.isArray(rawCountries)) {
         rawCountries.forEach((country: any) => {
@@ -248,6 +244,10 @@ export function useIptvCatalog() {
           }
         });
       }
+
+      const localChannels = localM3uItems
+        .flat()
+        .map((item: any) => buildChannel(item, countryCodeOverrides));
 
       const channels: Channel[] = [
         ...(Array.isArray(rawChannels)
