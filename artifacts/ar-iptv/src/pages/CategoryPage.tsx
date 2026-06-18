@@ -43,6 +43,13 @@ export default function CategoryPage() {
 
   const shouldShowLoadMore = filteredChannels.length > visibleItems;
   const visibleChannels = filteredChannels.slice(0, visibleItems);
+  const visibleCountryGroups = useMemo(() => {
+    return visibleChannels.reduce<Record<string, typeof visibleChannels>>((acc, channel) => {
+      if (!acc[channel.country]) acc[channel.country] = [];
+      acc[channel.country].push(channel);
+      return acc;
+    }, {});
+  }, [visibleChannels]);
 
   useEffect(() => {
     setVisibleItems(18);
@@ -144,13 +151,24 @@ export default function CategoryPage() {
                 No channels match your filter. Try a different search term.
               </div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2">
-                {visibleChannels.map((channel, index) => (
-                  <ChannelCard
-                    key={channel.id}
-                    channel={channel}
-                    index={index}
-                  />
+              <div className="space-y-8">
+                {Object.entries(visibleCountryGroups).map(([country, list]) => (
+                  <div key={country} className="space-y-4 rounded-3xl border border-white/10 bg-slate-900/80 p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-white">{country}</h3>
+                        <p className="text-sm text-slate-400">{list.length} channels</p>
+                      </div>
+                      <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-[0.35em] text-cyan-200">
+                        {categoryLabel}
+                      </span>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {list.map((channel, index) => (
+                        <ChannelCard key={channel.id} channel={channel} index={index} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
