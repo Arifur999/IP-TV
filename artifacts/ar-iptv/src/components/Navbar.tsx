@@ -18,10 +18,10 @@ export default function Navbar() {
           <Link href="/favorites" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
             Favorites
           </Link>
-          <Link href="/category/entertainment" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
+          <Link href="/categories" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
             Categories
           </Link>
-          <Link href="/country/united-states" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
+          <Link href="/countries" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
             Countries
           </Link>
         </div>

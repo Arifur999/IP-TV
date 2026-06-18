@@ -6,6 +6,8 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
 import CountryPage from "@/pages/CountryPage";
 import CategoryPage from "@/pages/CategoryPage";
+import CategoriesPage from "@/pages/CategoriesPage";
+import CountriesPage from "@/pages/CountriesPage";
 import FavoritesPage from "@/pages/FavoritesPage";
 import WatchPage from "@/pages/WatchPage";
 
@@ -15,7 +17,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
+      <Route path="/countries" component={CountriesPage} />
       <Route path="/country/:slug" component={CountryPage} />
+      <Route path="/categories" component={CategoriesPage} />
       <Route path="/category/:slug" component={CategoryPage} />
       <Route path="/favorites" component={FavoritesPage} />
       <Route path="/watch/:id" component={WatchPage} />

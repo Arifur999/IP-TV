@@ -84,7 +84,7 @@ export default function HomePage() {
                   Favorites · {favorites.length}
                 </Link>
                 <Link
-                  href="/category/entertainment"
+                  href="/categories"
                   className="rounded-3xl border border-slate-700/70 bg-slate-900/80 p-4 text-center text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:bg-slate-800"
                 >
                   Explore categories
@@ -102,7 +102,7 @@ export default function HomePage() {
                   <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Browse by category</p>
                   <h2 className="mt-2 text-3xl font-bold text-white">Discover global genres</h2>
                 </div>
-                <Link href="/category/entertainment" className="text-sm font-semibold text-cyan-300 hover:text-white">
+                <Link href="/categories" className="text-sm font-semibold text-cyan-300 hover:text-white">
                   View all
                 </Link>
               </div>
@@ -119,7 +119,7 @@ export default function HomePage() {
                   <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Browse by country</p>
                   <h2 className="mt-2 text-3xl font-bold text-white">Live TV from around the world</h2>
                 </div>
-                <Link href="/country/united-states" className="text-sm font-semibold text-cyan-300 hover:text-white">
+                <Link href="/countries" className="text-sm font-semibold text-cyan-300 hover:text-white">
                   Explore countries
                 </Link>
               </div>
