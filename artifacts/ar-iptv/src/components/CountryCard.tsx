@@ -4,13 +4,14 @@ import { getCountryFlagUrl } from "@/lib/channels";
 interface CountryCardProps {
   country: string;
   countrySlug: string;
+  countryCode: string;
   countryFlag: string;
   count: number;
   index: number;
 }
 
-export default function CountryCard({ country, countrySlug, count, index }: CountryCardProps) {
-  const flagUrl = getCountryFlagUrl(countrySlug);
+export default function CountryCard({ country, countrySlug, countryCode, count, index }: CountryCardProps) {
+  const flagUrl = getCountryFlagUrl(countryCode);
 
   return (
     <Link href={`/country/${countrySlug}`}>

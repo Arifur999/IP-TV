@@ -5,9 +5,10 @@ import { Play } from "lucide-react";
 interface ChannelRowProps {
   channel: Channel;
   index: number;
+  watchHref?: string;
 }
 
-export default function ChannelRow({ channel, index }: ChannelRowProps) {
+export default function ChannelRow({ channel, index, watchHref }: ChannelRowProps) {
   const is1080p = channel.name.toLowerCase().includes("1080p");
   const is720p = channel.name.toLowerCase().includes("720p");
   const isHD = channel.name.toLowerCase().includes("hd");
@@ -18,7 +19,7 @@ export default function ChannelRow({ channel, index }: ChannelRowProps) {
   else if (isHD) qualityBadge = "HD";
 
   return (
-    <Link href={`/watch/${channel.id}`}>
+    <Link href={watchHref || `/watch/${channel.id}`}>
       <div
         className="group flex items-center justify-between rounded-lg border border-cyan-500/20 bg-[#0a0a0a] p-4 transition-all duration-300 hover:border-cyan-500/60 hover:bg-[#1a1a1a] hover:shadow-[0_0_15px_rgba(0,229,255,0.2)] animate-fade-in-up"
         style={{ animationDelay: `${index * 50}ms` }}
