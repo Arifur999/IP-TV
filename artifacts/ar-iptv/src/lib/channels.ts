@@ -236,7 +236,7 @@ const NON_COUNTRY_GROUPS = new Set([
   "myhd kidz",
 ]);
 
-const ADULT_GROUP_PATTERN = /\b(adult|xxx|18\+|porn|erotic|sex)\b/i;
+const ADULT_GROUP_PATTERN = /\b(adult|adulte|xxx|18\+|porn|erotic|sex)\b/i;
 
 function slugify(value: string) {
   return value
@@ -349,7 +349,7 @@ function parseM3u(text: string, source: { category: string; forceHdPlus?: boolea
         group,
         language: attrs["tvg-language"] || "Unknown",
         logo: attrs["tvg-logo"] || "",
-        isHdPlus: !!source.forceHdPlus || isAdultGroup(group),
+        isHdPlus: !!source.forceHdPlus || isAdultGroup(group) || isAdultGroup(title),
       };
       continue;
     }
@@ -386,7 +386,7 @@ function chooseCategory(rawCategories: string[] = [], group?: string) {
 }
 
 function buildChannel(channel: any, countryCodeOverrides: Map<string, string>, options: { forceHdPlus?: boolean } = {}): Channel {
-  const isHdPlus = !!options.forceHdPlus || !!channel.isHdPlus || isAdultGroup(channel.group) || isAdultGroup(channel.category);
+  const isHdPlus = !!options.forceHdPlus || !!channel.isHdPlus || isAdultGroup(channel.group) || isAdultGroup(channel.category) || isAdultGroup(channel.name);
   const resolved = isHdPlus
     ? { country: "HD+", countryCode: "un" }
     : resolveCountry(channel.countryHint || channel.country || channel.country_code || channel.group, countryCodeOverrides);

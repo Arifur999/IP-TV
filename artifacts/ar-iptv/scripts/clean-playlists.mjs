@@ -26,7 +26,7 @@ const sources = [
 const checkLinks = !process.argv.includes("--no-check");
 const concurrency = Number(process.env.PLAYLIST_CHECK_CONCURRENCY || 32);
 const timeoutMs = Number(process.env.PLAYLIST_CHECK_TIMEOUT_MS || 4500);
-const adultPattern = /\b(adult|xxx|18\+|porn|erotic|sex)\b/i;
+const adultPattern = /\b(adult|adulte|xxx|18\+|porn|erotic|sex)\b/i;
 
 function parseAttributes(line) {
   const attrs = {};
