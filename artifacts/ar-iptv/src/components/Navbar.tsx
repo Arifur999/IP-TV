@@ -24,6 +24,9 @@ export default function Navbar() {
           <Link href="/countries" className="text-sm font-medium text-slate-200 hover:text-white transition-colors">
             Countries
           </Link>
+          <Link href="/hd-plus" className="text-sm font-medium text-cyan-200 hover:text-white transition-colors">
+            HD+
+          </Link>
         </div>
         <div className="flex flex-col items-end text-right text-xs text-cyan-400/80">
           <span className="font-semibold">Arif</span>

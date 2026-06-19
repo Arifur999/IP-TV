@@ -17,6 +17,14 @@ export default function WatchPage() {
     () => data?.channels.find((item) => item.id === id),
     [data, id]
   );
+  const countryChannels = useMemo(
+    () => (channel ? data?.channels.filter((item) => item.countrySlug === channel.countrySlug) ?? [] : []),
+    [channel, data]
+  );
+  const currentIndex = countryChannels.findIndex((c) => c.id === channel?.id);
+  const prevChannel = currentIndex > 0 ? countryChannels[currentIndex - 1] : null;
+  const nextChannel = currentIndex >= 0 && currentIndex < countryChannels.length - 1 ? countryChannels[currentIndex + 1] : null;
+  const isFavorite = channel ? favorites.includes(channel.id) : false;
 
   useEffect(() => {
     if (channel) {
@@ -36,17 +44,6 @@ export default function WatchPage() {
       </div>
     );
   }
-
-  const countryChannels = useMemo(
-    () => data?.channels.filter((item) => item.countrySlug === channel.countrySlug) ?? [],
-    [channel.countrySlug, data]
-  );
-
-  const currentIndex = countryChannels.findIndex((c) => c.id === channel.id);
-  const prevChannel = currentIndex > 0 ? countryChannels[currentIndex - 1] : null;
-  const nextChannel = currentIndex < countryChannels.length - 1 ? countryChannels[currentIndex + 1] : null;
-
-  const isFavorite = favorites.includes(channel.id);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#02050f] text-white font-sans">
