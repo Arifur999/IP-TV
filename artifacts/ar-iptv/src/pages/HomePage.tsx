@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowRight, Heart, PlayCircle, Search, Star, Tv } from "lucide-react";
+import { ArrowRight, Heart, PlayCircle, Search, Tv } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import CountryCard from "@/components/CountryCard";
 import SearchBar from "@/components/SearchBar";
@@ -171,20 +171,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {!isLoading && channels.length > 0 && (
-          <section className="mt-8 grid gap-4 rounded-xl border border-white/10 bg-slate-950/70 p-5 sm:grid-cols-3">
-            <div className="flex items-center gap-3">
-              <Star className="h-5 w-5 text-cyan-300" />
-              <div>
-                <p className="text-sm font-semibold text-white">Two playlists only</p>
-                <p className="text-xs text-slate-400">Old sources are disconnected.</p>
-              </div>
-            </div>
-            <div className="text-sm text-slate-300 sm:col-span-2">
-              Countries are built from `tvg-country` when available, then clear channel-name hints, then International as the fallback.
-            </div>
-          </section>
-        )}
       </main>
     </div>
   );
