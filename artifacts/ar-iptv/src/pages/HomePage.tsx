@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { ArrowRight, Heart, PlayCircle, Search, Star, Tv } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import CountryCard from "@/components/CountryCard";
-import CategoryCard from "@/components/CategoryCard";
 import SearchBar from "@/components/SearchBar";
 import ChannelCard from "@/components/ChannelCard";
 import { useFavorites, useRecentWatch } from "@/hooks/use-favorites";
@@ -10,182 +10,181 @@ import { useIptvCatalog, searchChannels } from "@/lib/channels";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
+  const [, setLocation] = useLocation();
   const { data, isLoading, isError } = useIptvCatalog();
-  const { favorites } = useFavorites();
+  const { favorites, toggleFavorite } = useFavorites();
   const { recent } = useRecentWatch();
 
   const countries = data?.countries ?? [];
-  const categories = data?.categories ?? [];
   const channels = data?.channels ?? [];
+  const normalizedQuery = query.trim().toLowerCase();
 
-  const topCategories = useMemo(
-    () => categories.filter((category) => category.count > 0).sort((a, b) => b.count - a.count).slice(0, 6),
-    [categories]
+  const matchingChannels = useMemo(
+    () => (normalizedQuery ? searchChannels(channels, query) : []),
+    [channels, normalizedQuery, query]
   );
 
-  const topCountries = useMemo(
-    () => [...countries].sort((a, b) => b.count - a.count).slice(0, 6),
-    [countries]
+  const visibleCountries = useMemo(() => {
+    const countryMatches = countries.filter((country) => country.country.toLowerCase().includes(normalizedQuery));
+    const channelCountrySlugs = new Set(matchingChannels.map((channel) => channel.countrySlug));
+    return [...countries]
+      .filter((country) => !normalizedQuery || countryMatches.includes(country) || channelCountrySlugs.has(country.countrySlug))
+      .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country));
+  }, [countries, matchingChannels, normalizedQuery]);
+
+  const favoriteChannels = useMemo(
+    () => channels.filter((channel) => favorites.includes(channel.id)).slice(0, 4),
+    [channels, favorites]
   );
 
-  const searchResults = useMemo(
-    () => (query ? searchChannels(channels, query).slice(0, 6) : []),
-    [channels, query]
+  const recentChannels = useMemo(
+    () => recent.map((id) => channels.find((channel) => channel.id === id)).filter(Boolean).slice(0, 4),
+    [channels, recent]
   );
 
-  const featuredChannels = useMemo(() => channels.slice(0, 8), [channels]);
+  const highlightedChannels = normalizedQuery ? matchingChannels.slice(0, 6) : favoriteChannels.length ? favoriteChannels : recentChannels;
 
   return (
-    <div className="min-h-screen bg-[#03040d] text-slate-100 selection:bg-cyan-500/30 font-sans">
+    <div className="min-h-screen bg-[#05070c] text-slate-100 selection:bg-cyan-500/30 font-sans">
       <Navbar />
-      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="mb-4 uppercase tracking-[0.32em] text-cyan-400/80">Global Live TV Directory</p>
-              <h1 className="mb-4 text-4xl font-black leading-tight text-white md:text-5xl">
-                Watch public IPTV channels from every continent.
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(8,13,24,0.98),rgba(2,37,45,0.72),rgba(5,7,12,0.98))] p-5 shadow-2xl shadow-black/30 sm:p-7 lg:p-8">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div className="min-w-0">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-xs uppercase tracking-[0.22em] text-cyan-200">
+                <Tv className="h-4 w-4" />
+                Country-first live TV
+              </div>
+              <h1 className="max-w-3xl text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
+                Pick a country, then start watching live sports channels.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                Explore worldwide television by country, category, or search. Save favorites and continue watching channels you love.
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+                The catalog now uses only your two M3U playlists and keeps browsing simple: countries first, categories inside each country.
               </p>
-              <div className="mt-6 max-w-xl">
+              <div className="mt-6 max-w-2xl">
                 <SearchBar
                   value={query}
                   onChange={setQuery}
-                  placeholder="Search channels, countries, categories..."
-                  suggestions={searchResults.map((result) => ({
-                    id: result.id,
-                    label: result.name,
-                    hint: `${result.country} • ${result.category}`,
+                  placeholder="Search country or channel..."
+                  suggestions={matchingChannels.slice(0, 5).map((channel) => ({
+                    id: channel.id,
+                    label: channel.name,
+                    hint: `${channel.country} - ${channel.category}`,
                   }))}
+                  onSelectSuggestion={(id) => setLocation(`/watch/${id}`)}
                 />
                 {isError && (
-                  <p className="mt-3 text-sm text-rose-300">Unable to load live TV catalog. Please refresh or check your connection.</p>
+                  <p className="mt-3 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                    Unable to load the bundled playlists. Please refresh the page.
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4 rounded-3xl bg-slate-900/80 p-6 text-slate-300 shadow-inner shadow-black/20">
-              <div className="rounded-3xl bg-cyan-500/10 p-5">
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/80">Live catalog</p>
-                <p className="mt-3 text-2xl font-semibold text-white">
-                  {isLoading ? "Loading channels..." : channels.length.toLocaleString()} channels
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+                <p className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-200">
+                  <PlayCircle className="h-4 w-4" /> Channels
                 </p>
-                <p className="mt-2 text-sm text-slate-400">
-                  {isLoading ? "Fetching global IPTV catalog..." : `From ${countries.length} countries and ${categories.length} categories.`}
+                <p className="mt-2 text-3xl font-bold text-white">{isLoading ? "..." : channels.length.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+                <p className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-200">
+                  <Search className="h-4 w-4" /> Countries
                 </p>
+                <p className="mt-2 text-3xl font-bold text-white">{isLoading ? "..." : countries.length.toLocaleString()}</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Link
-                  href="/favorites"
-                  className="rounded-3xl border border-cyan-500/20 bg-white/5 p-4 text-center text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/40 hover:bg-cyan-500/10"
-                >
-                  Favorites · {favorites.length}
-                </Link>
-                <Link
-                  href="/categories"
-                  className="rounded-3xl border border-slate-700/70 bg-slate-900/80 p-4 text-center text-sm font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:bg-slate-800"
-                >
-                  Explore categories
-                </Link>
-              </div>
+              <Link href="/favorites" className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-4 transition hover:bg-cyan-400/15">
+                <p className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-100">
+                  <Heart className="h-4 w-4" /> Favorites
+                </p>
+                <p className="mt-2 text-3xl font-bold text-white">{favorites.length.toLocaleString()}</p>
+              </Link>
             </div>
           </div>
         </section>
 
-        <section className="mt-10 grid gap-8 xl:grid-cols-[1fr_0.9fr]">
-          <div className="space-y-8">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Browse by category</p>
-                  <h2 className="mt-2 text-3xl font-bold text-white">Discover global genres</h2>
-                </div>
-                <Link href="/categories" className="text-sm font-semibold text-cyan-300 hover:text-white">
-                  View all
+        {(highlightedChannels.length > 0 || normalizedQuery) && (
+          <section className="mt-8">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/80">
+                  {normalizedQuery ? "Channel matches" : favoriteChannels.length ? "Favorites" : "Recently watched"}
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-white">
+                  {normalizedQuery ? "Matching channels" : "Quick access"}
+                </h2>
+              </div>
+              {!normalizedQuery && favoriteChannels.length > 0 && (
+                <Link href="/favorites" className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-white">
+                  View all <ArrowRight className="h-4 w-4" />
                 </Link>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {topCategories.map((category, index) => (
-                  <CategoryCard key={category.slug} title={category.name} slug={category.slug} count={category.count} icon={category.icon} gradient={category.gradient} />
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Browse by country</p>
-                  <h2 className="mt-2 text-3xl font-bold text-white">Live TV from around the world</h2>
-                </div>
-                <Link href="/countries" className="text-sm font-semibold text-cyan-300 hover:text-white">
-                  Explore countries
-                </Link>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {topCountries.map((country, index) => (
-                  <CountryCard key={country.countrySlug} {...country} index={index} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-              <div className="mb-4">
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Favorites</p>
-                <h2 className="mt-2 text-3xl font-bold text-white">Your saved channels</h2>
-              </div>
-              {favorites.length ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {channels
-                    .filter((channel) => favorites.includes(channel.id))
-                    .slice(0, 4)
-                    .map((channel, index) => (
-                      <ChannelCard key={channel.id} channel={channel} index={index} />
-                    ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400">Save channels as favorites while exploring categories and countries.</p>
               )}
             </div>
-
-            <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-              <div className="mb-4">
-                <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Recently watched</p>
-                <h2 className="mt-2 text-3xl font-bold text-white">Resume where you left off</h2>
+            {highlightedChannels.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {highlightedChannels.map((channel, index) => (
+                  <ChannelCard
+                    key={channel.id}
+                    channel={channel}
+                    index={index}
+                    isFavorite={favorites.includes(channel.id)}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                ))}
               </div>
-              {recent.length ? (
-                <div className="grid gap-4">
-                  {recent.slice(0, 3).map((id, index) => {
-                    const channel = channels.find((item) => item.id === id);
-                    return channel ? <ChannelCard key={channel.id} channel={channel} index={index} /> : null;
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400">Watch a channel and it will appear here.</p>
-              )}
-            </div>
-          </div>
-        </section>
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-slate-950/70 p-6 text-sm text-slate-300">
+                No channel matches found. Try a country name like India, Bangladesh, United Kingdom, or Argentina.
+              </div>
+            )}
+          </section>
+        )}
 
-        <section className="mt-10 rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mt-8">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">Featured channels</p>
-              <h2 className="mt-2 text-3xl font-bold text-white">Start watching now</h2>
+              <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/80">Browse by country</p>
+              <h2 className="mt-1 text-2xl font-bold text-white">Available countries</h2>
             </div>
-            <Link href="/favorites" className="text-sm font-semibold text-cyan-300 hover:text-white">
-              See all favorites
-            </Link>
+            <span className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-300">
+              {visibleCountries.length} shown
+            </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {featuredChannels.map((channel, index) => (
-              <ChannelCard key={channel.id} channel={channel} index={index} />
-            ))}
-          </div>
+
+          {isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="h-36 animate-pulse rounded-xl bg-slate-900/80" />
+              ))}
+            </div>
+          ) : visibleCountries.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {visibleCountries.map((country, index) => (
+                <CountryCard key={country.countrySlug} {...country} index={index} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-white/10 bg-slate-950/70 p-8 text-center text-slate-300">
+              No countries match this search.
+            </div>
+          )}
         </section>
+
+        {!isLoading && channels.length > 0 && (
+          <section className="mt-8 grid gap-4 rounded-xl border border-white/10 bg-slate-950/70 p-5 sm:grid-cols-3">
+            <div className="flex items-center gap-3">
+              <Star className="h-5 w-5 text-cyan-300" />
+              <div>
+                <p className="text-sm font-semibold text-white">Two playlists only</p>
+                <p className="text-xs text-slate-400">Old sources are disconnected.</p>
+              </div>
+            </div>
+            <div className="text-sm text-slate-300 sm:col-span-2">
+              Countries are built from `tvg-country` when available, then clear channel-name hints, then International as the fallback.
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

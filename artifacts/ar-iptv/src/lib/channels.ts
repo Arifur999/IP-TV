@@ -40,16 +40,9 @@ export interface IptvCatalog {
   categories: CategoryMeta[];
 }
 
-const CHANNELS_URL = "https://iptv-org.github.io/api/channels.json";
-const COUNTRIES_URL = "https://iptv-org.github.io/api/countries.json";
-
 const LOCAL_M3U_SOURCES = [
-  { name: "Sport Clean", url: "/playlists/Sport_Clean.m3u", category: "Sports" },
-  { name: "FIFA World Cup", url: "/playlists/Fifa-world-cup.m3u", category: "Sports" },
-];
-
-const HD_PLUS_M3U_SOURCES = [
-  { name: "HD+", url: "/playlists/HDPlus.m3u", category: "HD+" },
+  { name: "Sports Playlist", url: "/playlists/playlist.m3u", category: "Sports" },
+  { name: "FIFA World Cup", url: "/playlists/fifa-world-cup.m3u", category: "Sports", defaultCountry: "International" },
 ];
 
 const CATEGORY_META_DATA: Record<string, { icon: string; gradient: string }> = {
@@ -171,6 +164,8 @@ const COUNTRY_ALIASES: Record<string, string> = {
   general: "International",
   ku: "International",
   "latin america": "International",
+  lat: "Latin America",
+  latam: "Latin America",
   lib: "Lebanon",
   music: "International",
   mybox: "International",
@@ -238,6 +233,30 @@ const NON_COUNTRY_GROUPS = new Set([
 
 const ADULT_GROUP_PATTERN = /\b(adult|adulte|xxx|18\+|porn|erotic|sex)\b/i;
 
+const TITLE_COUNTRY_HINTS: Array<[RegExp, string]> = [
+  [/\b(ARG|AR)\b/i, "AR"],
+  [/\b(BD|BAN|BANGLADESH)\b/i, "BD"],
+  [/\b(BRA|BRASIL|BRAZIL)\b/i, "BR"],
+  [/\b(COL|COLOMBIA)\b/i, "CO"],
+  [/\b(ECU|ECUADOR)\b/i, "EC"],
+  [/\b(IND|INDIA)\b/i, "IN"],
+  [/\b(LAT|LATAM|LATINO|LATINA)\b/i, "Latin America"],
+  [/\b(MEX|MEXICO)\b/i, "MX"],
+  [/\b(PER|PERU)\b/i, "PE"],
+  [/\b(UK|GB|SKY SPORTS)\b/i, "GB"],
+  [/\b(USA|US)\b/i, "US"],
+  [/🇦🇷/, "AR"],
+  [/🇧🇩/, "BD"],
+  [/🇧🇷/, "BR"],
+  [/🇨🇴/, "CO"],
+  [/🇪🇨/, "EC"],
+  [/🇬🇧/, "GB"],
+  [/🇮🇳/, "IN"],
+  [/🇲🇽/, "MX"],
+  [/🇵🇪/, "PE"],
+  [/🇺🇸/, "US"],
+];
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -293,6 +312,11 @@ function isAdultGroup(value = "") {
   return ADULT_GROUP_PATTERN.test(value);
 }
 
+function inferCountryHintFromTitle(title: string) {
+  const match = TITLE_COUNTRY_HINTS.find(([pattern]) => pattern.test(title));
+  return match?.[1] || "";
+}
+
 function resolveCountry(rawValue: string | undefined, countryCodeOverrides: Map<string, string>) {
   const raw = (rawValue || "").replace(/^\*/, "").trim();
   const normalized = slugify(raw);
@@ -330,7 +354,7 @@ function resolveCountry(rawValue: string | undefined, countryCodeOverrides: Map<
   return { country: "International", countryCode: "un" };
 }
 
-function parseM3u(text: string, source: { category: string; forceHdPlus?: boolean }) {
+function parseM3u(text: string, source: { category: string; forceHdPlus?: boolean; defaultCountry?: string }) {
   const lines = text.split(/\r?\n/).map((line) => line.trim());
   const items: any[] = [];
   let pending: any = null;
@@ -342,10 +366,11 @@ function parseM3u(text: string, source: { category: string; forceHdPlus?: boolea
       const attrs = parseAttributes(line);
       const title = commaIndex >= 0 ? line.slice(commaIndex + 1).trim() : attrs["tvg-name"] || "Untitled channel";
       const group = attrs["group-title"] || "";
+      const inferredCountry = inferCountryHintFromTitle(title);
       pending = {
         name: title || attrs["tvg-name"] || "Untitled channel",
-        countryHint: attrs["tvg-country"] || group,
-        categories: [source.category],
+        countryHint: attrs["tvg-country"] || inferredCountry || source.defaultCountry || group,
+        categories: [group || source.category],
         group,
         language: attrs["tvg-language"] || "Unknown",
         logo: attrs["tvg-logo"] || "",
@@ -422,7 +447,7 @@ function buildChannel(channel: any, countryCodeOverrides: Map<string, string>, o
   };
 }
 
-async function fetchM3uItems(sources: Array<{ name: string; url: string; category: string; forceHdPlus?: boolean }>) {
+async function fetchM3uItems(sources: Array<{ name: string; url: string; category: string; forceHdPlus?: boolean; defaultCountry?: string }>) {
   const results = await Promise.all(
     sources.map(async (source) => {
       const response = await fetch(source.url);
@@ -460,33 +485,8 @@ export function filterChannelsByLetter(channels: Channel[], letter: string) {
 }
 
 async function loadCatalog(): Promise<IptvCatalog> {
-  const [rawChannels, rawCountries, localM3uItems, hdPlusM3uItems] = await Promise.all([
-    fetch(CHANNELS_URL)
-      .then(async (res) => (res.ok ? res.json() : []))
-      .catch(() => []),
-    fetch(COUNTRIES_URL)
-      .then(async (res) => (res.ok ? res.json() : []))
-      .catch(() => []),
-    fetchM3uItems(LOCAL_M3U_SOURCES).catch(() => []),
-    fetchM3uItems(HD_PLUS_M3U_SOURCES.map((source) => ({ ...source, forceHdPlus: true }))).catch(() => []),
-  ]);
-
+  const localM3uItems = await fetchM3uItems(LOCAL_M3U_SOURCES).catch(() => []);
   const countryCodeOverrides = new Map<string, string>();
-  if (Array.isArray(rawCountries)) {
-    rawCountries.forEach((country: any) => {
-      const name = country.name?.trim();
-      const code = (country.code || country.alpha2 || "").toLowerCase();
-      if (name && code) {
-        countryCodeOverrides.set(slugify(name), code);
-      }
-    });
-  }
-
-  const remoteChannels = Array.isArray(rawChannels)
-    ? rawChannels
-        .map((item: any) => buildChannel(item, countryCodeOverrides))
-        .filter((channel) => !!channel.streamUrl && !channel.isHdPlus)
-    : [];
 
   const localChannels = localM3uItems
     .map((item: any) => buildChannel(item, countryCodeOverrides))
@@ -496,12 +496,9 @@ async function loadCatalog(): Promise<IptvCatalog> {
     ...localM3uItems
       .map((item: any) => buildChannel(item, countryCodeOverrides, { forceHdPlus: item.isHdPlus }))
       .filter((channel) => !!channel.streamUrl && channel.isHdPlus),
-    ...hdPlusM3uItems
-      .map((item: any) => buildChannel(item, countryCodeOverrides, { forceHdPlus: true }))
-      .filter((channel) => !!channel.streamUrl),
   ];
 
-  const channels = [...remoteChannels, ...localChannels];
+  const channels = localChannels;
 
   const countryMap = new Map<string, CountryMeta>();
   channels.forEach((channel) => {
