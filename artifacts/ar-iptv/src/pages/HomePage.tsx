@@ -6,7 +6,7 @@ import CountryCard from "@/components/CountryCard";
 import SearchBar from "@/components/SearchBar";
 import ChannelCard from "@/components/ChannelCard";
 import { useFavorites, useRecentWatch } from "@/hooks/use-favorites";
-import { useIptvCatalog, searchChannels } from "@/lib/channels";
+import { Channel, useIptvCatalog, searchChannels } from "@/lib/channels";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -38,7 +38,11 @@ export default function HomePage() {
   );
 
   const recentChannels = useMemo(
-    () => recent.map((id) => channels.find((channel) => channel.id === id)).filter(Boolean).slice(0, 4),
+    () =>
+      recent
+        .map((id) => channels.find((channel) => channel.id === id))
+        .filter((channel): channel is Channel => Boolean(channel))
+        .slice(0, 4),
     [channels, recent]
   );
 

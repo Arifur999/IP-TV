@@ -15,7 +15,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-black text-white">
       <Navbar />
       <main className="container mx-auto px-4 py-10">
-        <div className="mb-8 flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/30 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-4 rounded-xl border border-white/10 bg-slate-950/80 p-6 shadow-2xl shadow-slate-950/30 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-cyan-300">
               <Heart className="h-5 w-5" />
@@ -27,7 +27,7 @@ export default function FavoritesPage() {
             </p>
           </div>
           <Link href="/">
-            <button className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20">
+            <button className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/20">
               <ArrowLeft className="h-4 w-4" /> Back to dashboard
             </button>
           </Link>
@@ -36,17 +36,17 @@ export default function FavoritesPage() {
         {isLoading ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-72 rounded-3xl bg-slate-900/80 animate-pulse" />
+              <div key={index} className="h-72 rounded-xl bg-slate-900/80 animate-pulse" />
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-10 text-center text-slate-400">
+          <div className="rounded-xl border border-white/10 bg-slate-950/80 p-10 text-center text-slate-400">
             Unable to load favorites. Please refresh and try again.
           </div>
         ) : favoriteChannels.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-slate-950/80 p-10 text-center text-slate-200">
+          <div className="rounded-xl border border-white/10 bg-slate-950/80 p-10 text-center text-slate-200">
             <h2 className="mb-4 text-2xl font-semibold text-white">No favorite channels yet.</h2>
-            <p className="text-slate-400">Browse by country or category and tap the heart icon to save your top stations.</p>
+            <p className="text-slate-400">Browse by country and tap the heart icon to save your top stations.</p>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
